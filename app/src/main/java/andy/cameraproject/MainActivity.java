@@ -1,6 +1,7 @@
 package andy.cameraproject;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.webkit.HttpAuthHandler;
@@ -11,28 +12,60 @@ import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity {
 
+    Button btnStart;
+    WebView webCamera;
+    EditText editUsername;
+    EditText editPassword;
+    EditText editStreamURL;
+
+    Handler timer;
+    int delay;
+
+    String webURL;
+    String username;
+    String password;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final Button btnLogin = findViewById(R.id.btnLogin);
-        final WebView webViewCamera = findViewById(R.id.webViewCamera);
-        final EditText editTextAuthUsername = findViewById(R.id.editTextAuthUsername);
-        final EditText editTextAuthPassword = findViewById(R.id.editTextAuthPassword);
+        // Initialize views
+        btnStart = findViewById(R.id.btnStart);
+        webCamera = findViewById(R.id.webCamera);
+        editUsername = findViewById(R.id.editUsername);
+        editPassword = findViewById(R.id.editPassword);
+        editStreamURL = findViewById(R.id.editStreamURL);
 
-        webViewCamera.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm) {
-                super.onReceivedHttpAuthRequest(view, handler, host, realm);
-                handler.proceed(editTextAuthUsername.getText().toString(), editTextAuthPassword.getText().toString());
-            }
-        });
+        // Prepare image streamer
+        timer = new Handler();
+        delay = 200;
+        webCamera.setInitialScale(210);
 
-        btnLogin.setOnClickListener(new View.OnClickListener() {
+        btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                webViewCamera.loadUrl("http://192.168.2.15:8081/");
+
+
+                username = editUsername.getText().toString();
+                password = editPassword.getText().toString();
+                webURL = editStreamURL.getText().toString();
+
+                webCamera.setWebViewClient(new WebViewClient() {
+                    @Override
+                    public void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm) {
+                        super.onReceivedHttpAuthRequest(view, handler, host, realm);
+                        handler.proceed(username, password);
+                    }
+                });
+
+                timer.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        webCamera.loadUrl(webURL);
+                        timer.postDelayed(this, delay);
+                    }
+                }, delay);
             }
         });
     }
