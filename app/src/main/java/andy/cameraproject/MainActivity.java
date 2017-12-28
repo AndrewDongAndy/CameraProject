@@ -1,9 +1,11 @@
 package andy.cameraproject;
 
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Display;
 import android.view.View;
 import android.webkit.HttpAuthHandler;
 import android.webkit.WebView;
@@ -22,8 +24,8 @@ public class MainActivity extends AppCompatActivity {
     // Variables for handler (auto-refresh)
     private Handler timer;
     private int delay;
-    private static Boolean finishedLoading;
-    private static Boolean btnStartPressed;
+    private static boolean finishedLoading;
+    private static boolean btnStartPressed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize views as finals
         final Button btnStart = findViewById(R.id.btnStart);
+        final Button btnStop = findViewById(R.id.btnStop);
         final WebView webCamera = findViewById(R.id.webCamera);
         final EditText editUsername = findViewById(R.id.editUsername);
         final EditText editPassword = findViewById(R.id.editPassword);
@@ -44,8 +47,15 @@ public class MainActivity extends AppCompatActivity {
 
         // Prepare image streamer
         timer = new Handler();
-        delay = 40; // low delay to test adaptability
-        webCamera.setInitialScale(210);
+        delay = 100;
+
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        int height = size.y;
+        int scale = (int) Math.round(height * 0.18);
+
+        webCamera.setInitialScale(scale);
         finishedLoading = false;
         btnStartPressed = false;
 
@@ -54,13 +64,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 webCamera.loadUrl(webURL);
-
-                if (btnStartPressed && !finishedLoading) {
-                    delay += 4;
-                    // increment the delay until
-                    // the page can refresh fast enough;
-                    // will have some flashes at start
-                }
+                if (btnStartPressed && !finishedLoading) delay += 4;
                 timer.postDelayed(this, delay);
             }
         }, delay);
@@ -70,19 +74,20 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 btnStartPressed = true;
 
-                // Get current states
+                // Get current input
                 username = editUsername.getText().toString();
                 password = editPassword.getText().toString();
-                webURL = editStreamURL.getText().toString();
+                webURL = editStreamURL.getText().toString().concat(getString(R.string.stream_URL_ending));
 
                 client = new MyWebViewClient(username, password);
                 webCamera.setWebViewClient(client);
                 webCamera.loadUrl(webURL);
+
             }
         });
     }
 
-    public static void setFinishedLoading(Boolean finished) {
+    public static void setFinishedLoading(boolean finished) {
         finishedLoading = finished;
     }
 }
