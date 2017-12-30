@@ -15,32 +15,31 @@ import android.widget.EditText;
 
 
 public class MainActivity extends AppCompatActivity {
+
     // Variables for the WebView
     private String webURL;
     private String username;
     private String password;
     private WebViewClient client;
+    private WebView webCamera;
 
     // Variables for handler (auto-refresh)
     private Handler timer;
     private int delay;
     private static boolean finishedLoading;
     private static boolean btnStartPressed;
+    private Runnable imageTick;
 
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        /*
-        AlertDialog.Builder loginScreen;
-        loginScreen = new AlertDialog.Builder(context);
-        */
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize views as finals
+        // Initialize views as finals (constants)
         final Button btnStart = findViewById(R.id.btnStart);
         final Button btnStop = findViewById(R.id.btnStop);
-        final WebView webCamera = findViewById(R.id.webCamera);
+        webCamera = findViewById(R.id.webCamera);
         final EditText editUsername = findViewById(R.id.editUsername);
         final EditText editPassword = findViewById(R.id.editPassword);
         final EditText editStreamURL = findViewById(R.id.editStreamURL);
@@ -59,20 +58,20 @@ public class MainActivity extends AppCompatActivity {
         finishedLoading = false;
         btnStartPressed = false;
 
-        // Keep handler always running (for now)
-        timer.postDelayed(new Runnable() {
+        imageTick = new Runnable() {
             @Override
             public void run() {
                 webCamera.loadUrl(webURL);
-                if (btnStartPressed && !finishedLoading) delay += 4;
+                if (btnStartPressed && !finishedLoading) delay += 20;
                 timer.postDelayed(this, delay);
             }
-        }, delay);
+        };
 
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 btnStartPressed = true;
+                startTimer();
 
                 // Get current input
                 username = editUsername.getText().toString();
@@ -84,6 +83,23 @@ public class MainActivity extends AppCompatActivity {
                 webCamera.loadUrl(webURL);
             }
         });
+
+        btnStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                btnStartPressed = false;
+                stopTimer();
+            }
+        });
+    }
+
+    private void startTimer() {
+        timer.postDelayed(imageTick, delay);
+    }
+
+    private void stopTimer() {
+        // Currently stops the images from loading onto device
+        timer.removeCallbacks(imageTick);
     }
 
     public static void setFinishedLoading(boolean finished) {
@@ -96,7 +112,7 @@ class MyWebViewClient extends WebViewClient {
     private String handlerUsername;
     private String handlerPassword;
 
-    public MyWebViewClient(String username, String password) {
+    MyWebViewClient(String username, String password) {
         handlerUsername = username;
         handlerPassword = password;
     }
