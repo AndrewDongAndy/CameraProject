@@ -82,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
                 client = new MyWebViewClient(username, password);
                 webCamera.setWebViewClient(client);
                 webCamera.loadUrl(webURL);
-
             }
         });
     }
